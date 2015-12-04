@@ -1,0 +1,16 @@
+This is project for CISC320 Introduction to Algorithms class at University of Delaware
+
+Team name: Super Human Animal (or Super Animal Human, I forget)
+
+Information retrieval system 
+
+to run: 
+method 1:
+	- make
+	- ./main
+method 2:
+	- g++ -std=c++11 -main.cpp -o main -w
+	- ./main
+
+
+
