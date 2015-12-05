@@ -1,1 +1,1 @@
-" Hello the world ! It is a great day. ";
+Hello world great day
