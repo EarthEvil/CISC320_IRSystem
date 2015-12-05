@@ -31,11 +31,10 @@ wordset ------ remove duplicate
 
 */
 
-void readStopWord(IRSystem *irs){
+void readStopWord(IRSystem *irs) {
 	string s;
 	ifstream inStream;
 	string filePath = "/home/tongming/320_Project_2/stop_words.txt";
-	int count = 0;
 	//try to open file
 	inStream.open(filePath);
 	if (inStream.fail()) {
@@ -45,11 +44,8 @@ void readStopWord(IRSystem *irs){
 
 	while (!inStream.eof()) {
 		inStream >> s;
-		cout << s << endl;
 		irs->addStopWord(s);
-		count ++;
 	}
-	cout << count<< endl;
 	inStream.close();
 
 }
@@ -60,17 +56,19 @@ void readStopWord(IRSystem *irs){
 int main() {
 	string searchstring = "place";
 	IRSystem *irs = new IRSystem();
-	irs->initialize();
-	irs->makeFrequencyMatrix();
+	readStopWord(irs);	//
+	//irs->makeFrequencyMatrix();
 
 	// need to read files from folder here
-	string path = "/home/tongming/320_Project_2/texts_project";
+	static string path = "/home/tongming/320_Project_2/texts_project";
 	string filePath;
 	DIR* dir;
 	dirent* pdir;
 	std::vector<string> files;
 	ifstream inStream;
 	string line;
+	string fileString;
+	string query;
 	dir = opendir(path.c_str());
 
 	while (pdir = readdir(dir)) {
@@ -79,15 +77,10 @@ int main() {
 			// do nothing
 		} else {
 			files.push_back(pdir->d_name); // use it
-			cout << pdir->d_name << endl;
 		}
 	}
 
-	for (auto c : files) {
-		// cout << c << " ";
-	}
 	for (int i = 0; i < files.size(); i++) {
-		// cout << " file name: " << files[i] << endl;
 		filePath = path + "/" + files[i];	// get full path of file
 
 		// try to open file
@@ -99,16 +92,30 @@ int main() {
 
 		// read input line one by one
 		while (getline(inStream, line)) {
-			// cout << line <<"||||||"<< endl;
+			fileString += line;
 		}
 
 		inStream.close();	// close inStream
-	}
 
-	readStopWord(irs);
-	// test addStopWord
-	for( auto c : irs->getStopWordsList()){
-		cout << c << " ";
-	}
+		// now fileString = content of document
+		// add document name
+		irs->addDocumentName(files[i]);
+		// add document content
+		irs->addDocument(fileString);
+
+		fileString.clear();
+	} // end of for
+
+	cout << "Welcome to SHA (Super Human Animal) Information Retrieval System" << endl;
+	cout << "Type in your query: ";
+
+	getline(cin, query);
+
+	irs->addDocumentName("query");
+	irs->addDocument(query);
+
+	irs->initialize();
+	irs->makeFrequencyMatrix();
+
 }
 
