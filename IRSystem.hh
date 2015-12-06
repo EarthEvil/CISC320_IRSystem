@@ -404,307 +404,319 @@ void IRSystem::insert(vector<string> words, int documentNumber) {
     }
     //temp.clear();
   }
-      cleanWordMatrix.push_back(temp);
+  cleanWordMatrix.push_back(temp);
 
 }
-  vector<string> IRSystem::stringClean(string sentence) {
-    /*Steps for document handling
-      - replace punctuation by space
-      - extract words; get last word
-      - stemming
-      - powerfunction build index;
-    */
-    std::vector<string> words;
-    int pos = 0;
-    string token;
-    string temp;
-    for (int j = 0; j < sentence.size(); j ++) {
-      if (ispunct(sentence[j])) {
-        sentence[j] = ' ';   //replace punctuation by space
-      }
-    }
-    //extract words based on space
-    pos = sentence.find(WHITESPACE);  //find position of space
-    while (pos != string::npos) { //while not end of string
-      token = sentence.substr(0, pos); //extract word into token
-      if (token.find_first_not_of(' ') != string::npos) { //if is white space
-
-        token = this->toLowerCase(token); //to lower case
-        if (!this->isStopWord(token)) { //check if in stop word
-          token = this->stemming(token);  //stemming
-          words.push_back(token);
-        }
-      }
-      sentence.erase(0, pos + 1);
-      pos = sentence.find(WHITESPACE);
-    }//while end
-
-    //handle last word
-    token = sentence.substr(0, sentence.size());
-    token = this->toLowerCase(token);
-    if ((token.find_first_not_of(' ') != string::npos) && (!this->isStopWord(token))) { // not white space and not stop word
-      token = this->stemming(token);
-      words.push_back(token);
-    }
-    return words;
-  }
-
-  std::vector<int> IRSystem::search(string input) {
-    int size;
-    int index = 0;
-    std::vector<string> afterClean;
-    std::vector<int> result;
-    unordered_map<string, unordered_set<int> >::const_iterator got;
-
-    afterClean = this->stringClean(input);
-    for (int i = 0; i < this->documents.size(); i ++) {
-      result.push_back(0);
-    }
-    for (auto word : afterClean) {
-      got = map.find(word);
-      if (got != map.end()) {
-        for (auto i : got->second) {
-          result[i] += 1;
-        }
-      }
-    }
-    return result;
-  }
-
-  vector<int> IRSystem:: queryResult(vector<int> v) {
-    std::vector<int> result;
-    int haha = 9; //get top 10 documents that contains most words from query
-    int tempmax = 0;
-    int index = 0;
-
-    while (haha >= 0) { //get top 10 index base on how many times words apprea in documents
-      //find max
-      for (int i = 0; i < v.size(); i++) {
-        if (v[i] > tempmax) {
-          tempmax = v[i];
-          index = i;
-          v[i] = 0;
-        }
-      }
-      if (tempmax > 0) {
-        result.push_back(index);
-      }
-      tempmax = 0;
-      haha --;
-    }
-
-    return result;
-  }
-
-  void IRSystem::printQueryResult(string s) {
-    vector<int> v = this->queryResult(this->search(s));
-    if (v.size() > 0) {
-      cout << "we found following document(s) for you:" << endl;
-      for (int c : v) {
-        cout << this->getDocumentsName()[c] << ", ";
-      }
-      cout << endl;
-    }
-    else {
-      cout << "No document found" << endl;
+vector<string> IRSystem::stringClean(string sentence) {
+  /*Steps for document handling
+    - replace punctuation by space
+    - extract words; get last word
+    - stemming
+    - powerfunction build index;
+  */
+  std::vector<string> words;
+  int pos = 0;
+  string token;
+  string temp;
+  for (int j = 0; j < sentence.size(); j ++) {
+    if (ispunct(sentence[j])) {
+      sentence[j] = ' ';   //replace punctuation by space
     }
   }
+  //extract words based on space
+  pos = sentence.find(WHITESPACE);  //find position of space
+  while (pos != string::npos) { //while not end of string
+    token = sentence.substr(0, pos); //extract word into token
+    if (token.find_first_not_of(' ') != string::npos) { //if is white space
 
-  void IRSystem::makeFrequencyMatrix() {
-    // get map
-    int row = cleanWordMatrix.size();
-    int column = wordSet.size();
-    cout << endl;
-
-    double matrix[row][column]; // all elements initialized to 0.
-
-    // cout << "before" << endl;
-    for (int i = 0; i < row; i++) {
-      for (int j = 0; j < column; j++) {
-        matrix[i][j] = 0;
+      token = this->toLowerCase(token); //to lower case
+      if (!this->isStopWord(token)) { //check if in stop word
+        token = this->stemming(token);  //stemming
+        words.push_back(token);
       }
     }
-    /*
-    cleanWordMatrix
-    */
+    sentence.erase(0, pos + 1);
+    pos = sentence.find(WHITESPACE);
+  }//while end
 
-    /**/
-    cout << "wordIndexLookUpMap" << endl;
-    for (auto &c : wordIndexLookUpMap) {
-      cout << c.first << "\t" << c.second << endl;
-    }
+  //handle last word
+  token = sentence.substr(0, sentence.size());
+  token = this->toLowerCase(token);
+  if ((token.find_first_not_of(' ') != string::npos) && (!this->isStopWord(token))) { // not white space and not stop word
+    token = this->stemming(token);
+    words.push_back(token);
+  }
+  return words;
+}
 
-    int index;
-    unordered_map<string, int>::const_iterator got;
+std::vector<int> IRSystem::search(string input) {
+  int size;
+  int index = 0;
+  std::vector<string> afterClean;
+  std::vector<int> result;
+  unordered_map<string, unordered_set<int> >::const_iterator got;
 
-    // number of time each word appears in each documents
-    for (int i = 0; i < cleanWordMatrix.size(); i ++) {
-      for (int j = 0; j < cleanWordMatrix[i].size(); j ++) {
-        cout << cleanWordMatrix[i][j] << "\t";
-        got = wordIndexLookUpMap.find(cleanWordMatrix[i][j]);
-        if (got != wordIndexLookUpMap.end()) {
-          index = got->second;
-          matrix[i][index] += 1;
-        }
-
+  afterClean = this->stringClean(input);
+  for (int i = 0; i < this->documents.size(); i ++) {
+    result.push_back(0);
+  }
+  for (auto word : afterClean) {
+    got = map.find(word);
+    if (got != map.end()) {
+      for (auto i : got->second) {
+        result[i] += 1;
       }
-      cout << endl;
     }
+  }
+  return result;
+}
 
-    /* Term frequency */
-    vector<int> size; // store size of each document
-    for (int i = 0; i < cleanWordMatrix.size(); i ++) {
-      size.push_back(cleanWordMatrix[i].size());
+vector<int> IRSystem:: queryResult(vector<int> v) {
+  std::vector<int> result;
+  int haha = 9; //get top 10 documents that contains most words from query
+  int tempmax = 0;
+  int index = 0;
+
+  while (haha >= 0) { //get top 10 index base on how many times words apprea in documents
+    //find max
+    for (int i = 0; i < v.size(); i++) {
+      if (v[i] > tempmax) {
+        tempmax = v[i];
+        index = i;
+        v[i] = 0;
+      }
+    }
+    if (tempmax > 0) {
+      result.push_back(index);
+    }
+    tempmax = 0;
+    haha --;
+  }
+
+  return result;
+}
+
+void IRSystem::printQueryResult(string s) {
+  vector<int> v = this->queryResult(this->search(s));
+  if (v.size() > 0) {
+    cout << "we found following document(s) for you:" << endl;
+    for (int c : v) {
+      cout << this->getDocumentsName()[c] << ", ";
     }
     cout << endl;
-    // Term Frequency Matrix
-    for (int i = 0; i < row; i ++) {
-      for (int j = 0; j < column; j ++) {
-        matrix[i][j] /= size[i];
-      }
-    }
-
-
-    // print matrix
-    for (int i = 0; i < row; i++) {
-      for (int j = 0; j < column; j++) {
-        // cout << matrix[i][j] << " ";
-      }
-    }
-
-    /*  Inverse Document Frequency */
-    /*
-    Steps:
-    1. calculate total number of documents in the collection, N
-    2. calculate number of documents in which the term t appears, nt
-    3. calculate log(N/nt)
-    */
-
-    //1. calculate total number of documents in the collection, N
-    int totalNumberOfDocuments = documents.size();
-
-    unordered_map<string, double> IDF;
-    unordered_map<string, unordered_set<int> >::const_iterator hah; //for map
-
-    // 2. calculate number of documents in which the term t appears, nt
-
-
-    //
-    cout << "hah.second" << endl;
-    for (auto c : wordList) {
-      hah = map.find(c);
-      if (hah != map.end()) {
-        // 4.
-
-        cout << hah->second.size();
-        IDF[c] = log(totalNumberOfDocuments / (hah->second.size())); //calculate log(N/nt)
-      }
-    }
-    cout << "hah.second" << endl;
-
-
-    haha();
-    // print IDF
-    // cout << "before" << endl;
-    // for (auto &x : IDF) {
-    //   cout << x.first << " " << x.second << endl;
-    // }
-
-    // for (auto &x : IDF) {
-    //   x.second = totalNumberOfDocuments / x.second;
-    //   x.second = log(x.second);
-    // }
-    // cout << "after" << endl;
-    // for (auto &x : IDF) {
-    //   cout << x.first << " " << x.second << endl;
-    // }
-
-    /* Tf*IDF*/
-    /*
-    for each word in wordList, find it's index,
-    matrix[index][column] *= IDF
-    */
-    // cout << "wordlist" << endl;
-    // for ( auto  c : wordList) {
-    //   cout << c;
-    // } cout << endl;
-
-
-    for (int i = 0; i <  cleanWordMatrix.size(); i ++) {
-      for ( int j = 0; j < cleanWordMatrix[i].size(); j ++) {
-        cout << cleanWordMatrix[i][j] << "\t";
-      }
-      cout << endl;
-    }
-
-    cout << "TF MATRIX" << endl;
-    for (int i = 0; i < row; i ++) {
-      for (int j = 0; j < column; j ++) {
-        cout << matrix[i][j] << " \t";
-      }
-      cout << endl;
-    }
-    int rowNumber;  //index of word in matrix
-    double idfvalue;
-
-    cout << "TF*IDF MATRIX" << endl;
-
-    unordered_map<string, double>::const_iterator IDFIt;
-    for (int i = 0; i < row; i ++) {
-      IDFIt = IDF.find(wordList[i]);
-      if (IDFIt != IDF.end()) {
-        idfvalue = IDFIt->second;
-        for (int j = 0; j < column; j++) {
-          matrix[i][j] *= idfvalue;  // TF * IDF
-          cout << matrix[i][j] << "\t";
-        }
-        cout << endl;
-      }
-    }
-
-    cout << "-----------------" << endl;
-    for (int i = 0; i < row; i ++) {
-      for (int j = 0; j < column; j ++) {
-        cout << matrix[i][j] << "\t";
-      }
-      cout << endl;
-    }
-
-    double distance;
-    double  queryValue;  // query is always at the last row
-    double temp;
-    double difference;
-    cout << "difference" << endl;
-    /*compute Euclidian distance*/
-    for ( int i = 0; i < row - 1; i ++) {
-      for (int j = 0; j < column - 1; j++) {
-        queryValue = matrix[row - 1][j];
-
-        difference = queryValue - matrix[i][j];
-        // cout << difference << "\t";
-        temp += pow(difference, 2);
-      }
-      cout << endl;
-
-      distance = sqrt(temp);
-      EuclidianDistances.push_back(distance);
-    }
-
-    for (int i = 0; i < EuclidianDistances.size(); i++) {
-      cout << EuclidianDistances[i] << " " << documentsName[i] << endl;
-    }
-
   }
+  else {
+    cout << "No document found" << endl;
+  }
+}
+
+void IRSystem::makeFrequencyMatrix() {
+  // get map
+  int row = cleanWordMatrix.size();
+  int column = wordSet.size();
+  cout << endl;
+
+  double matrix[row][column]; // all elements initialized to 0.
+
+  // cout << "before" << endl;
+  for (int i = 0; i < row; i++) {
+    for (int j = 0; j < column; j++) {
+      matrix[i][j] = 0;
+    }
+  }
+  /*
+  cleanWordMatrix
+  */
+
+  /**/
+  cout << "wordIndexLookUpMap" << endl;
+  for (auto &c : wordIndexLookUpMap) {
+    cout << c.first << "\t" << c.second << endl;
+  }
+
+  int index;
+  unordered_map<string, int>::const_iterator got;
+
+  // number of time each word appears in each documents
+  for (int i = 0; i < cleanWordMatrix.size(); i ++) {
+    for (int j = 0; j < cleanWordMatrix[i].size(); j ++) {
+      cout << cleanWordMatrix[i][j] << "\t";
+      got = wordIndexLookUpMap.find(cleanWordMatrix[i][j]);
+      if (got != wordIndexLookUpMap.end()) {
+        index = got->second;
+        matrix[i][index] += 1;
+      }
+
+    }
+    cout << endl;
+  }
+
+  /* Term frequency */
+  vector<int> size; // store size of each document
+  for (int i = 0; i < cleanWordMatrix.size(); i ++) {
+    size.push_back(cleanWordMatrix[i].size());
+  }
+  cout << endl;
+  // Term Frequency Matrix
+  for (int i = 0; i < row; i ++) {
+    for (int j = 0; j < column; j ++) {
+      matrix[i][j] /= size[i];
+    }
+  }
+
+
+  // print matrix
+  for (int i = 0; i < row; i++) {
+    for (int j = 0; j < column; j++) {
+      // cout << matrix[i][j] << " ";
+    }
+  }
+
+  /*  Inverse Document Frequency */
+  /*
+  Steps:
+  1. calculate total number of documents in the collection, N
+  2. calculate number of documents in which the term t appears, nt
+  3. calculate log(N/nt)
+  */
+
+  //1. calculate total number of documents in the collection, N
+  int totalNumberOfDocuments = documents.size();
+
+  unordered_map<string, double> IDF;
+  unordered_map<string, unordered_set<int> >::const_iterator hah; //for map
+
+  // 2. calculate number of documents in which the term t appears, nt
+
+
+  //
+  double nt;
+  double Nnt;
+  // cout << "nt" << endl;
+  // cout <<log10(10000000 / 1000) << endl;
+  for (auto c : wordList) {
+    hah = map.find(c);
+    if (hah != map.end()) {
+      // 4.
+      nt = hah->second.size() + 1;  //need add one to avoid divided by 0
+      Nnt = double(totalNumberOfDocuments / nt);
+      // cout << hah->first <<"\t"<<totalNumberOfDocuments<<"\t" <<nt<< "\t"<<Nnt<<"\t" <<log10(Nnt)<<  endl;
+      IDF[c] = log10(Nnt); //calculate log(N/nt)
+    }
+  }
+
+  haha();
+  // print IDF
+  // cout << "before" << endl;
+  // for (auto &x : IDF) {
+  //   cout << x.first << " " << x.second << endl;
+  // }
+
+  // for (auto &x : IDF) {
+  //   x.second = totalNumberOfDocuments / x.second;
+  //   x.second = log(x.second);
+  // }
+  // cout << "after" << endl;
+  // for (auto &x : IDF) {
+  //   cout << x.first << " " << x.second << endl;
+  // }
+
+  /* Tf*IDF*/
+  /*
+  for each word in wordList, find it's index,
+  matrix[index][column] *= IDF
+  */
+  // cout << "wordlist" << endl;
+  // for ( auto  c : wordList) {
+  //   cout << c;
+  // } cout << endl;
+
+
+  for (int i = 0; i <  cleanWordMatrix.size(); i ++) {
+    for ( int j = 0; j < cleanWordMatrix[i].size(); j ++) {
+      // cout << cleanWordMatrix[i][j] << "\t";
+    }
+    // cout << endl;
+  }
+
+  cout << "TF MATRIX" << endl;
+  for (int i = 0; i < row; i ++) {
+    for (int j = 0; j < column; j ++) {
+      // cout << matrix[i][j] << " \t";
+    }
+    // cout << endl;
+  }
+  int rowNumber;  //index of word in matrix
+  double idfvalue;
+
+  cout << "TF*IDF MATRIX" << endl;
+
+
+  //IDF is worgin
+
+  unordered_map<string, double>::const_iterator IDFIt;
+  cout << "word IDF pari" << endl;
+  for (int i = 0; i < column; i ++) {
+    IDFIt = IDF.find(wordList[i]);
+    cout << wordList[i] << endl;
+    if (IDFIt != IDF.end()) {
+      idfvalue = IDFIt->second;
+      for (int j = 0; j < row; j++) {
+        cout << matrix[j][i] << "\t" << idfvalue << "\t";
+        matrix[j][i] *= idfvalue;  // TF * IDF
+        cout << matrix[j][i] << endl;
+      }
+      cout << endl;
+    }
+  }
+  double distance;
+  double  queryValue;  // query is always at the last row
+  double temp;
+  double difference;
+
+
+  cout << "print matrix" << endl;
+  for ( int i = 0; i < row ; i ++) {
+    for (int j = 0; j < column ; j++) {
+      cout << matrix[i][j] << "\t";
+    }
+    cout << endl;
+  }
+  cout << "Euclidian distance" << endl;
+
+
+
+
+  // for(int i = 0; i < row)
 
   /*compute Euclidian distance*/
-  /*void IRSystem::calculateEuclidianDistances(){
-    double temp;
-    int row = sizeof(matrix) / sizeof(matrix[0]);
-    int column = sizeof(matrix[0]) / sizeof(double);
-    cout << "matrix size" << endl;
-    cout << row<< column;
-    // for(int i =0; i < matrix)
-  }*/
+  for ( int i = 0; i < row - 1; i ++) {
+    for (int j = 0; j < column ; j++) {
+      queryValue = matrix[row - 1][j];
+
+      difference = queryValue - matrix[i][j];
+      // cout << difference << "\t";
+      temp += pow(difference, 2);
+    }
+    distance = sqrt(temp);
+    EuclidianDistances.push_back(distance);
+  }
+
+  for (int i = 0; i < EuclidianDistances.size(); i++) {
+    cout << EuclidianDistances[i] << " " << documentsName[i] << endl;
+  }
+
+}
+
+/*compute Euclidian distance*/
+/*void IRSystem::calculateEuclidianDistances(){
+  double temp;
+  int row = sizeof(matrix) / sizeof(matrix[0]);
+  int column = sizeof(matrix[0]) / sizeof(double);
+  cout << "matrix size" << endl;
+  cout << row<< column;
+  // for(int i =0; i < matrix)
+}*/
 
 #endif
 
