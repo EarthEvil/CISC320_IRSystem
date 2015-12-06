@@ -402,10 +402,11 @@ void IRSystem::insert(vector<string> words, int documentNumber) {
     if (documentNumber != queryIndex) {
       this->insertMapSecond(word, documentNumber);  //build map for indexing}
     }
-    cleanWordMatrix.push_back(temp);
     //temp.clear();
   }
+      cleanWordMatrix.push_back(temp);
 
+}
   vector<string> IRSystem::stringClean(string sentence) {
     /*Steps for document handling
       - replace punctuation by space
@@ -515,7 +516,7 @@ void IRSystem::insert(vector<string> words, int documentNumber) {
     int column = wordSet.size();
     cout << endl;
 
-    float matrix[row][column]; // all elements initialized to 0.
+    double matrix[row][column]; // all elements initialized to 0.
 
     // cout << "before" << endl;
     for (int i = 0; i < row; i++) {
@@ -539,12 +540,15 @@ void IRSystem::insert(vector<string> words, int documentNumber) {
     // number of time each word appears in each documents
     for (int i = 0; i < cleanWordMatrix.size(); i ++) {
       for (int j = 0; j < cleanWordMatrix[i].size(); j ++) {
+        cout << cleanWordMatrix[i][j] << "\t";
         got = wordIndexLookUpMap.find(cleanWordMatrix[i][j]);
         if (got != wordIndexLookUpMap.end()) {
           index = got->second;
           matrix[i][index] += 1;
         }
+
       }
+      cout << endl;
     }
 
     /* Term frequency */
@@ -579,8 +583,7 @@ void IRSystem::insert(vector<string> words, int documentNumber) {
     //1. calculate total number of documents in the collection, N
     int totalNumberOfDocuments = documents.size();
 
-    unordered_map<string, float
-    > IDF;
+    unordered_map<string, double> IDF;
     unordered_map<string, unordered_set<int> >::const_iterator hah; //for map
 
     // 2. calculate number of documents in which the term t appears, nt
@@ -668,7 +671,7 @@ void IRSystem::insert(vector<string> words, int documentNumber) {
     }
 
     double distance;
-    float  queryValue;  // query is always at the last row
+    double  queryValue;  // query is always at the last row
     double temp;
     double difference;
     cout << "difference" << endl;
