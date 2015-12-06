@@ -50,14 +50,10 @@ void readStopWord(IRSystem *irs) {
 
 }
 
-
-
-
 int main() {
 	string searchstring = "place";
 	IRSystem *irs = new IRSystem();
 	readStopWord(irs);	//
-	//irs->makeFrequencyMatrix();
 
 	// need to read files from folder here
 	static string path = "/home/tongming/320_Project_2/texts_project";
@@ -82,7 +78,7 @@ int main() {
 
 	for (int i = 0; i < files.size(); i++) {
 		filePath = path + "/" + files[i];	// get full path of file
-
+		cout <<filePath<< endl;
 		// try to open file
 		inStream.open(filePath);
 		if (inStream.fail()) {
