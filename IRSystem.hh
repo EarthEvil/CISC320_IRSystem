@@ -14,6 +14,9 @@
 #include <ctype.h>
 #include <math.h>
 #include <limits>
+#include "graph.hh"
+#include <chrono>
+#include <thread>
 
 
 using namespace std;
@@ -270,7 +273,10 @@ void stemfile(FILE * f)
 class IRSystem
 {
 public:
-  IRSystem() {};
+  IRSystem() {
+    knowledgeBase = new Graph();
+    // initializing graph
+  };
 
 
   //methods
@@ -281,7 +287,7 @@ public:
   vector<string> stringClean(string); //clean a sentence, and make it in to vector of words
   void makeFrequencyMatrix();
   void calculateEuclidianDistances();
-
+  void readStopWord();
   vector<int> search(string);
   vector<int> queryResult(vector<double>);
   void printQueryResult();//clean query and return documents that contains words in query
@@ -291,7 +297,8 @@ public:
   void insertWordList(string);
   void insertMap(string);
   void insertMapSecond(string, int);
-  void haha() {cout << endl;}
+
+
   //getter
   vector<string> getStopWordsList() {return stopwordsList;}
   vector<string> getWordList() {return wordList;}
@@ -304,14 +311,19 @@ public:
   vector<vector<string> > getCleanWordMatrix() {return cleanWordMatrix;}
   unordered_map<string, int> getWordIndexLookUpMap() {return wordIndexLookUpMap;}
   vector<double> getEuclidianDistances() {return EuclidianDistances;}
+  Graph * getKB() {return knowledgeBase;}
 
-
-
+  void fake();
   // building methods
   void addDocumentName(string s) {documentsName.push_back(s);}
   void addDocument(string s) {documents.push_back(s);}
   void addStopWord(string s) {stopwordsList.push_back(s);}
+  bool getshouldexpand() {return shouldExpand;}
+  void setshouldexpand(bool x) {shouldExpand = x;}
+  void setexpand(bool x) {expand = x;}
 
+  void newfun();
+  void restart();
 private:
   unordered_set<string> stopWordSet;  //hashset used to store all stop words
   vector<string> stopwordsList;
@@ -329,12 +341,52 @@ private:
   unordered_map<string, int> wordIndexLookUpMap;
 
   vector<double> EuclidianDistances;
+  Graph *knowledgeBase;
+
+  bool expand = false;
+  bool shouldExpand;
+
 
 //---------Method Implementation--------------------------------
 
 };
+void IRSystem::restart() {
+  stopWordSet.clear();
+  wordIndexLookUpMap.clear();
+  map.clear();
+  EuclidianDistances.clear();
+  frequencyMatrix.clear();
+  cleanWordMatrix.clear();
+  wordList.clear();
+  wordSet.clear();
+
+}
+void IRSystem::readStopWord() {
+  string s;
+  ifstream inStream;
+  string filePath = "/home/tongming/320_Project_2/CISC320_IRSystem/stop_words.txt";
+  //try to open file
+  inStream.open(filePath);
+  if (inStream.fail()) {
+    cout << "Fail to open stop_words.txt" << endl;
+    exit(1);
+  }
+
+  while (!inStream.eof()) {
+    inStream >> s;
+    addStopWord(s);
+  }
+  inStream.close();
+}
+
 void IRSystem::initialize() {
+  restart();
+  knowledgeBase->readtext();
+  //read stopword
+  readStopWord();
+
   std::vector<string> temp;
+
   //makeSet
   for (int i = 0; i < stopwordsList.size(); i ++) {
     stopWordSet.insert(stopwordsList[i]);
@@ -353,6 +405,7 @@ void IRSystem::initialize() {
   }
 
 }
+
 bool IRSystem::isStopWord(string s) {
   std::unordered_set<std::string>::const_iterator i = stopWordSet.find(s);
   if (i != stopWordSet.end()) {
@@ -362,6 +415,7 @@ bool IRSystem::isStopWord(string s) {
     return false;
   }
 }
+
 string IRSystem::stemming(string s) {
   //stemming
   int length, stemIndex;
@@ -393,14 +447,13 @@ string IRSystem::toLowerCase(string s) {
 }
 
 void IRSystem::insert(vector<string> words, int documentNumber) {
-  //I can do frequency here.
   int queryIndex = documents.size() - 1;
   std::vector<string> temp;
   for (auto word : words) {
     temp.push_back(word);
     wordSet.insert(word);
-    if (documentNumber != queryIndex) {
-      this->insertMapSecond(word, documentNumber);  //build map for indexing}
+    if (documentNumber != queryIndex) { //dont not include query in map
+      this->insertMapSecond(word, documentNumber);  //build map for indexing
     }
   }
   cleanWordMatrix.push_back(temp);
@@ -470,19 +523,20 @@ std::vector<int> IRSystem::search(string input) {
   return result;
 }
 
+//get top 10, if has, query with smallest distance
 vector<int> IRSystem::queryResult(vector<double> v) {
   std::vector<int> result;
   int loop;
-  for (auto c : v) {
-    cout << c << endl;
+  // print EuclidianDistances file name
+  for (int i = 0; i < v.size(); i++) {
+    // cout << v[i] << " " << documentsName[i] << endl;
   }
   if (v.size() < 9) {
-    loop = v.size()-1;
+    loop = v.size();
   }
   else {
     loop = 9; //get top 10 documents that contains most words from query
   }
-  cout << "l"<< loop<< endl;
   double tempmax = v[0];
   int index = 0;
   double max = numeric_limits<double>::max();
@@ -492,32 +546,94 @@ vector<int> IRSystem::queryResult(vector<double> v) {
       if (v[i] <= tempmax) {
         tempmax = v[i];
         index = i;
-        
       }
     }
-    if (tempmax > 0) {
+    if (tempmax > 0 && (tempmax < 1)) {
       result.push_back(index);
     }
     tempmax = v[0];
     loop --;
     v[index] = max;
   }
+  // if size of result less then 9, get sub type from Knowledge base
+  int last = cleanWordMatrix.size() - 1;
+  if (result.size() < 10 && documents.size() >= 10 && !expand) {
+    shouldExpand = true;
+  }
+  else {
+    shouldExpand = false;
+  }
   return result;
 }
 
+void IRSystem::fake() {
+  std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
+}
+void IRSystem::newfun() {
+  // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  // fake();
+
+  cout << endl << "searching again..." << endl;
+  // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  fake();
+
+  int i;
+  cout << endl;
+  shouldExpand = false;
+  expand = true;
+  string expandQuery = "";
+  std::vector<string > temp;
+  string str;
+  int last = cleanWordMatrix.size() - 1;
+  //get subcat
+  for (int i = 0; i < cleanWordMatrix[last].size(); i++) {
+    // cout << "newFUN" << endl;
+
+    str = cleanWordMatrix[last][i];
+    temp = knowledgeBase->getDirectSubtype(str);
+    // cout << "tempsize " << temp.size() << endl;
+    for (auto c : temp) {
+      expandQuery = expandQuery + " " + c;
+      cout << c << endl;
+
+    }
+  }
+  documents.back() += expandQuery;
+  initialize();
+  makeFrequencyMatrix();
+  setshouldexpand(false);
+  printQueryResult();
+}
+
+
 void IRSystem::printQueryResult() { //clean query and return documents that contains words in query
   vector<int> v = queryResult(EuclidianDistances);
-  if (v.size() > 0) {
+
+  if (v.size() > 0 ) {
+    cout << endl;
     cout << "we found following document(s) for you:" << endl;
     for (int c : v) {
-      cout << documentsName[c] << ", ";
+      cout << documentsName[c] << endl;
     }
     cout << endl;
   }
   else {
-    cout << "No document found" << endl;
+    cout << endl;
+    cout << "Sorry, your search did not match any document." << endl;
+    if (shouldExpand) {
+      cout << "We will try to exand your search query." << endl;
+    }
+    else {
+      cout << "Suggestions:" << endl;
+      cout << "- Make sure all words are spelled correctly." << endl;
+      cout << "- Try different keywords." << endl;
+      cout << "- Try more general keywords." << endl;
+      cout << "- Try fewer keywords." << endl;
+    }
   }
 }
+
 
 void IRSystem::makeFrequencyMatrix() {
   int row = cleanWordMatrix.size();
@@ -550,7 +666,6 @@ void IRSystem::makeFrequencyMatrix() {
   for (int i = 0; i < cleanWordMatrix.size(); i ++) {
     size.push_back(cleanWordMatrix[i].size());
   }
-  cout << endl;
   // Term Frequency Matrix
   for (int i = 0; i < row; i ++) {
     for (int j = 0; j < column; j ++) {
@@ -578,6 +693,7 @@ void IRSystem::makeFrequencyMatrix() {
       nt = hah->second.size() + 1;  //need add one to avoid divided by 0
       Nnt = double(totalNumberOfDocuments / nt);
       IDF[c] = log10(Nnt); //calculate log(N/nt)
+
     }
   }
 

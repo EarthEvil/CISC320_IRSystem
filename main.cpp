@@ -31,32 +31,29 @@ wordset ------ remove duplicate
 
 */
 
-void readStopWord(IRSystem *irs) {
-	string s;
-	ifstream inStream;
-	string filePath = "/home/tongming/320_Project_2/stop_words.txt";
-	//try to open file
-	inStream.open(filePath);
-	if (inStream.fail()) {
-		cout << "Fail to open stop_words.txt" << endl;
-		exit(1);
-	}
+// void readStopWord(IRSystem *irs) {
+// 	string s;
+// 	ifstream inStream;
+// 	string filePath = "/home/tongming/320_Project_2/CISC320_IRSystem/stop_words.txt";
+// 	//try to open file
+// 	inStream.open(filePath);
+// 	if (inStream.fail()) {
+// 		cout << "Fail to open stop_words.txt" << endl;
+// 		exit(1);
+// 	}
 
-	while (!inStream.eof()) {
-		inStream >> s;
-		irs->addStopWord(s);
-	}
-	inStream.close();
-
-}
+// 	while (!inStream.eof()) {
+// 		inStream >> s;
+// 		irs->addStopWord(s);
+// 	}
+// 	inStream.close();
+// }
 
 int main() {
-	string searchstring = "place";
 	IRSystem *irs = new IRSystem();
-	readStopWord(irs);	//
 
 	// need to read files from folder here
-	static string path = "/home/tongming/320_Project_2/texts_project";
+	static string path = "/home/tongming/320_Project_2/CISC320_IRSystem/Documents";
 	string filePath;
 	DIR* dir;
 	dirent* pdir;
@@ -78,7 +75,7 @@ int main() {
 
 	for (int i = 0; i < files.size(); i++) {
 		filePath = path + "/" + files[i];	// get full path of file
-		cout <<filePath<< endl;
+		// cout <<filePath<< endl;
 		// try to open file
 		inStream.open(filePath);
 		if (inStream.fail()) {
@@ -103,15 +100,17 @@ int main() {
 	} // end of for
 
 	cout << "Welcome to SHA (Super Human Animal) Information Retrieval System" << endl;
-	cout << "Type in your query: ";
-
+	cout << "Type in your query: \n";
 	getline(cin, query);
-
 	irs->addDocumentName("query");
 	irs->addDocument(query);
-
 	irs->initialize();
+
 	irs->makeFrequencyMatrix();
 	irs->printQueryResult();
+	if (irs->getshouldexpand()) {
+		irs->newfun();
+	}
+	
 }
 
