@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <ctype.h>
 #include <math.h>
+#include <limits>
+
 
 using namespace std;
 
@@ -281,8 +283,8 @@ public:
   void calculateEuclidianDistances();
 
   vector<int> search(string);
-  vector<int> queryResult(vector<int>);
-  void printQueryResult(string);//clean query and return documents that contains words in query
+  vector<int> queryResult(vector<double>);
+  void printQueryResult();//clean query and return documents that contains words in query
 
   //insert methods
   void insert(vector<string>, int);
@@ -301,6 +303,9 @@ public:
   set<string> getWordSet() {return wordSet;}
   vector<vector<string> > getCleanWordMatrix() {return cleanWordMatrix;}
   unordered_map<string, int> getWordIndexLookUpMap() {return wordIndexLookUpMap;}
+  vector<double> getEuclidianDistances() {return EuclidianDistances;}
+
+
 
   // building methods
   void addDocumentName(string s) {documentsName.push_back(s);}
@@ -465,37 +470,47 @@ std::vector<int> IRSystem::search(string input) {
   return result;
 }
 
-vector<int> IRSystem::queryResult(vector<int> v) {
+vector<int> IRSystem::queryResult(vector<double> v) {
   std::vector<int> result;
-  int loop = 9; //get top 10 documents that contains most words from query
-  int tempmax = 0;
+  int loop;
+  for (auto c : v) {
+    cout << c << endl;
+  }
+  if (v.size() < 9) {
+    loop = v.size()-1;
+  }
+  else {
+    loop = 9; //get top 10 documents that contains most words from query
+  }
+  cout << "l"<< loop<< endl;
+  double tempmax = v[0];
   int index = 0;
-
+  double max = numeric_limits<double>::max();
   while (loop >= 0) { //get top 10 index base on how many times words apprea in documents
     //find max
     for (int i = 0; i < v.size(); i++) {
-      if (v[i] > tempmax) {
+      if (v[i] <= tempmax) {
         tempmax = v[i];
         index = i;
-        v[i] = 0;
+        
       }
     }
     if (tempmax > 0) {
       result.push_back(index);
     }
-    tempmax = 0;
+    tempmax = v[0];
     loop --;
+    v[index] = max;
   }
-
   return result;
 }
 
-void IRSystem::printQueryResult(string s) {
-  vector<int> v = this->queryResult(this->search(s));
+void IRSystem::printQueryResult() { //clean query and return documents that contains words in query
+  vector<int> v = queryResult(EuclidianDistances);
   if (v.size() > 0) {
     cout << "we found following document(s) for you:" << endl;
     for (int c : v) {
-      cout << this->getDocumentsName()[c] << ", ";
+      cout << documentsName[c] << ", ";
     }
     cout << endl;
   }
@@ -507,7 +522,7 @@ void IRSystem::printQueryResult(string s) {
 void IRSystem::makeFrequencyMatrix() {
   int row = cleanWordMatrix.size();
   int column = wordSet.size();
-  double matrix[row][column]; 
+  double matrix[row][column];
 
   // all elements initialized to 0.
   for (int i = 0; i < row; i++) {
@@ -515,14 +530,13 @@ void IRSystem::makeFrequencyMatrix() {
       matrix[i][j] = 0;
     }
   }
-  
+
   int index;
   unordered_map<string, int>::const_iterator got;
-
   // number of time each word appears in each documents
   for (int i = 0; i < cleanWordMatrix.size(); i ++) {
     for (int j = 0; j < cleanWordMatrix[i].size(); j ++) {
-      cout << cleanWordMatrix[i][j] << "\t";
+      got = wordIndexLookUpMap.find(cleanWordMatrix[i][j]);
       if (got != wordIndexLookUpMap.end()) {
         index = got->second;
         matrix[i][index] += 1;
@@ -599,7 +613,6 @@ void IRSystem::makeFrequencyMatrix() {
     temp = 0;
     EuclidianDistances.push_back(distance);
   }
-
 }
 
 #endif

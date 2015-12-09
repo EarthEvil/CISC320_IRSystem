@@ -112,6 +112,6 @@ int main() {
 
 	irs->initialize();
 	irs->makeFrequencyMatrix();
-
+	irs->printQueryResult();
 }
 
