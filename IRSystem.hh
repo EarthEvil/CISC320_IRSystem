@@ -268,8 +268,6 @@ void stemfile(FILE * f)
   }
 }
 
-
-
 class IRSystem
 {
 public:
@@ -531,16 +529,16 @@ vector<int> IRSystem::queryResult(vector<double> v) {
   for (int i = 0; i < v.size(); i++) {
     // cout << v[i] << " " << documentsName[i] << endl;
   }
-  if (v.size() < 9) {
+  if (v.size() < 5) {
     loop = v.size();
   }
   else {
-    loop = 9; //get top 10 documents that contains most words from query
+    loop = 5; //get top 10 documents that contains most words from query
   }
   double tempmax = v[0];
   int index = 0;
   double max = numeric_limits<double>::max();
-  while (loop >= 0) { //get top 10 index base on how many times words apprea in documents
+  while (loop >= 0) { //get top 6 index base on how many times words apprea in documents
     //find max
     for (int i = 0; i < v.size(); i++) {
       if (v[i] <= tempmax) {
@@ -557,7 +555,7 @@ vector<int> IRSystem::queryResult(vector<double> v) {
   }
   // if size of result less then 9, get sub type from Knowledge base
   int last = cleanWordMatrix.size() - 1;
-  if (result.size() < 10 && documents.size() >= 10 && !expand) {
+  if (result.size() < 6 && documents.size() >= 6 && !expand) {
     shouldExpand = true;
   }
   else {
@@ -567,15 +565,11 @@ vector<int> IRSystem::queryResult(vector<double> v) {
 }
 
 void IRSystem::fake() {
-  std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
-void IRSystem::newfun() {
-  // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-  // fake();
 
+void IRSystem::newfun() {
   cout << endl << "searching again..." << endl;
-  // std::this_thread::sleep_for(std::chrono::milliseconds(500));
   fake();
 
   int i;
@@ -611,7 +605,9 @@ void IRSystem::printQueryResult() { //clean query and return documents that cont
   vector<int> v = queryResult(EuclidianDistances);
 
   if (v.size() > 0 ) {
-    cout << endl;
+  cout << endl << "searching..." <<endl;
+  fake();
+   
     cout << "we found following document(s) for you:" << endl;
     for (int c : v) {
       cout << documentsName[c] << endl;
@@ -620,7 +616,7 @@ void IRSystem::printQueryResult() { //clean query and return documents that cont
   }
   else {
     cout << endl;
-    cout << "Sorry, your search did not match any document." << endl;
+    cout << "Sorry, your search of\n"<<documents[documents.size()-1]<<"\n did not match any document." << endl;
     if (shouldExpand) {
       cout << "We will try to exand your search query." << endl;
     }
